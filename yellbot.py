@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
+import asyncio
 import logging
 import os
 import random
-import yaml
 
 import discord
+import yaml
+from aiohttp import web
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 with open("whisper_responses.yml", "r") as file:
     whisper_responses: list = yaml.safe_load(file)
@@ -39,13 +41,25 @@ async def on_message(message: discord.Message):
     await handle_whispered_messages(message)
 
 
+async def health_check(request):
+    """Generic health check endpoint"""
+    return web.Response(text="OK")
+
+
+app = web.Application()
+app.add_routes([web.get("/health_check", health_check)])
+
+
 def main():
     try:
         token = os.environ["DISCORD_BOT_TOKEN"]
     except KeyError:
         logging.critical("DISCORD_BOT_TOKEN env var required but not defined")
         exit(1)
-    client.run(token)
+    loop = asyncio.get_event_loop()
+    loop.create_task(client.start(token))
+    web.run_app(app, port=8080, loop=loop)
+    loop.run_until_complete()
 
 
 if __name__ == "__main__":
