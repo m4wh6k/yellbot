@@ -24,6 +24,7 @@ async def handle_whispered_messages(message: discord.Message):
     Responds by yelling at the user"""
 
     if message.content != message.content.upper():
+        logging.info(f"Message content was not uppercase: {message.content}")
         content = random.choice(whisper_responses)
         await message.channel.send(content)
 
