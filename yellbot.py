@@ -62,15 +62,13 @@ app.add_routes([web.get("/health_check", health_check)])
 
 
 async def main():
-    # Start discord client
-    client.start(token)
-    # Start webserver
+    # Setup webserver
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host="0.0.0.0", port=8080)
-    await site.start()
 
-    await asyncio.Event().wait()
+    # Run webserver and discord client
+    await asyncio.gather(client.start(token), site.start())
 
 
 if __name__ == "__main__":
