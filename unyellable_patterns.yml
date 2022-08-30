@@ -1,3 +1,4 @@
-# This file lists regexes for strings that users can't yell
+# This file lists regexes for strings that users can't or shouldn't have to yell
 - <\w*:\w*:\d+> # Custom emoji
 - https?://\S+ # Naive URL pattern
+- (`[^`]*`) # Code blocks

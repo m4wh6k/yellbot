@@ -2,8 +2,8 @@
 import asyncio
 import logging
 import os
-import re
 import random
+import re
 
 import discord
 import yaml
@@ -30,11 +30,11 @@ async def handle_whispered_messages(message: discord.Message):
     # Remove message content that can't be yelled
     yellable_msg_content = message.content
     for pattern in unyellable_patterns:
-        yellable_msg_content = re.sub(pattern, yellable_msg_content)
+        yellable_msg_content = re.sub(pattern, "", yellable_msg_content)
 
     # See if message was yelled. Respond if not
     if yellable_msg_content != yellable_msg_content.upper():
-        logging.info(f"Remaining content was not uppercase: {message.content}")
+        logging.info(f"Remaining content was not uppercase: {yellable_msg_content}")
         response = random.choice(whisper_responses)
         await message.channel.send(response)
 
@@ -61,17 +61,18 @@ app = web.Application()
 app.add_routes([web.get("/health_check", health_check)])
 
 
-def main():
+async def main():
+    await client.start(token)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, port=8080)
+    await site.start()
+
+
+if __name__ == "__main__":
     try:
         token = os.environ["DISCORD_BOT_TOKEN"]
     except KeyError:
         logging.critical("DISCORD_BOT_TOKEN env var required but not defined")
         exit(1)
-    loop = asyncio.get_event_loop()
-    loop.create_task(client.start(token))
-    web.run_app(app, port=8080, loop=loop)
-    loop.run_until_complete()
-
-
-if __name__ == "__main__":
-    main()
+    asyncio.run(main())
