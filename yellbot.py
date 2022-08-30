@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import os
+import re
 import random
 
 import discord
@@ -13,6 +14,9 @@ logging.basicConfig(level=logging.INFO)
 with open("whisper_responses.yml", "r") as file:
     whisper_responses: list = yaml.safe_load(file)
 
+with open("unyellable_patterns.yml", "r") as file:
+    unyellable_patterns: list = yaml.safe_load(file)
+
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -23,10 +27,16 @@ async def handle_whispered_messages(message: discord.Message):
     """Handles messages that should be yelling in all caps but aren't.
     Responds by yelling at the user"""
 
-    if message.content != message.content.upper():
-        logging.info(f"Message content was not uppercase: {message.content}")
-        content = random.choice(whisper_responses)
-        await message.channel.send(content)
+    # Remove message content that can't be yelled
+    yellable_msg_content = message.content
+    for pattern in unyellable_patterns:
+        yellable_msg_content = re.sub(pattern, yellable_msg_content)
+
+    # See if message was yelled. Respond if not
+    if yellable_msg_content != yellable_msg_content.upper():
+        logging.info(f"Remaining content was not uppercase: {message.content}")
+        response = random.choice(whisper_responses)
+        await message.channel.send(response)
 
 
 @client.event
